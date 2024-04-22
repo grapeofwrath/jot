@@ -1,9 +1,11 @@
 package main
 
 import (
+    "bufio"
     "fmt"
     "os"
     "os/exec"
+    "slices"
     "sort"
     "strings"
     "time"
@@ -15,6 +17,8 @@ import (
 func main() {
     var homeDir, err = os.UserHomeDir()
         if err != nil {log.Fatal(err)}
+    // TODO
+    // add flags for notesDir and editor
     var notesDir = homeDir+"/notes"
     var editor = "nvim"
     var date = time.Now().Format("01/02/2006 3:04 PM")
@@ -30,30 +34,28 @@ func main() {
         err = openEditor.Run()
             if err != nil {log.Fatal(err)}
     } else {
-        var fileName = strings.Join(os.Args[1:], "_")
-        var notePath = notesDir+"/"+fileName+".md"
-
-        if _, err := os.Stat(notePath); err == nil {
-            var allNoteNames []string
-            var allNotes, err = os.ReadDir(notesDir)
-                if err != nil {log.Fatal(err)}
-            for _, file := range allNotes {
-                allNoteNames = append(allNoteNames, file.Name())
-            }
+        var allNoteNames []string
+        var allNotes, err = os.ReadDir(notesDir)
+            if err != nil {log.Fatal(err)}
+        for _, file := range allNotes {
+            allNoteNames = append(allNoteNames, file.Name())
+        }
+        var fileName = strings.Join(os.Args[1:], "_")+".md"
+        for slices.Contains(allNoteNames, fileName) {
             var matches = fuzzy.RankFind(fileName, allNoteNames)
             sort.Sort(matches)
 
-            log.Error("Note exists: "+notePath)
-            fmt.Println("Matching files:")
+            log.Error("A note with this name already exists")
+            fmt.Println("Matching notes:")
             for _, match := range matches {
                 fmt.Println(" - "+match.Target)
             }
-            //fmt.Println("Please input a new file name:")
-            os.Exit(1)
-            // TODO
-            // prompt to rename note
-            // while loop until new name is input
+            fmt.Println("Please input a new file name:")
+            var newFileName, err = bufio.NewReader(os.Stdin).ReadString('\n')
+                if err != nil {log.Fatal(err)}
+            fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
         }
+        var notePath = notesDir+"/"+fileName
 
         var openNote = exec.Command(editor, notePath)
         openNote.Stdin = os.Stdin
