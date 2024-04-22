@@ -4,7 +4,7 @@ import (
     "fmt"
     "os"
     "os/exec"
-    //"sort"
+    "sort"
     "strings"
     "time"
 
@@ -40,14 +40,13 @@ func main() {
             for _, file := range allNotes {
                 allNoteNames = append(allNoteNames, file.Name())
             }
-            var matches = fuzzy.Find(fileName, allNoteNames)
-            // TODO
-            // sort.Sort(matches)
+            var matches = fuzzy.RankFind(fileName, allNoteNames)
+            sort.Sort(matches)
 
             log.Error("Note exists: "+notePath)
             fmt.Println("Matching files:")
             for _, match := range matches {
-                fmt.Println(" - "+match)
+                fmt.Println(" - "+match.Target)
             }
             //fmt.Println("Please input a new file name:")
             os.Exit(1)
