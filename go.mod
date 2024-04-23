@@ -1,4 +1,4 @@
-module jot
+module github.com/grapeofwrath/jot
 
 go 1.21.5
 
