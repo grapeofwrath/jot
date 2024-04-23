@@ -15,10 +15,10 @@ import (
 )
 
 func main() {
+    // TODO
+    // add config file for primary variables
     var homeDir, err = os.UserHomeDir()
         if err != nil {log.Fatal(err)}
-    // TODO
-    // add flags for notesDir and editor
     var notesDir = homeDir+"/notes"
     var editor = "nvim"
     var date = time.Now().Format("01/02/2006 3:04 PM")
@@ -45,15 +45,22 @@ func main() {
             var matches = fuzzy.RankFind(fileName, allNoteNames)
             sort.Sort(matches)
 
-            log.Error("A note with this name already exists")
-            fmt.Println("Matching notes:")
+            log.Error("A note with this filename already exists")
+            fmt.Println("\033[1mMatching notes:\033[0m")
             for _, match := range matches {
-                fmt.Println(" - "+match.Target)
+                fmt.Println(" - \033[32m"+match.Target+"\033[0m")
             }
-            fmt.Println("Please input a new file name:")
+            fmt.Println("\033[1mPlease input a new filename:\033[0m")
             var newFileName, err = bufio.NewReader(os.Stdin).ReadString('\n')
                 if err != nil {log.Fatal(err)}
             fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
+            for strings.HasPrefix(fileName, "_") || strings.HasPrefix(fileName, ".") {
+                log.Error("Filename may not be null")
+                fmt.Println("\033[1mPlease input a new filename:\033[0m")
+                newFileName, err = bufio.NewReader(os.Stdin).ReadString('\n')
+                    if err != nil {log.Fatal(err)}
+                fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
+            }
         }
         var notePath = notesDir+"/"+fileName
 
