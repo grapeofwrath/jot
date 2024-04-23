@@ -1,1 +1,3 @@
-# Zettelkasten CLI Utility
+# Jot
+
+**A Zettelkasten CLI Helper**
