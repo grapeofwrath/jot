@@ -1,4 +1,4 @@
-package jot
+package main
 
 import (
     "bufio"
