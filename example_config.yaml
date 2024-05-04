@@ -1,0 +1,3 @@
+NotesDir: "/home/grape/notes"
+Editor: "nvim"
+Template: "---\ntitle: $title\ndate: $date\ntags:\n---\n\n# $title"

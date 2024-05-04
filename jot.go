@@ -5,24 +5,44 @@ import (
     "fmt"
     "os"
     "os/exec"
+    "path/filepath"
     "slices"
     "sort"
     "strings"
     "time"
 
+    "golang.org/x/text/cases"
+    "golang.org/x/text/language"
+    "gopkg.in/yaml.v3"
     "github.com/charmbracelet/log"
     "github.com/lithammer/fuzzysearch/fuzzy"
 )
 
+type Config struct {
+    NotesDir string `yaml:"NotesDir"`
+    Editor string `yaml:"Editor"`
+    Template string `yaml:"Template"`
+}
+
 func main() {
-    // TODO
-    // add config file for primary variables
-    var homeDir, err = os.UserHomeDir()
+    homeDir, err := os.UserHomeDir()
         if err != nil {log.Fatal(err)}
-    var notesDir = homeDir+"/notes"
+    var notesDir = filepath.Join(homeDir, "notes")
     var editor = "nvim"
-    var date = time.Now().Format("01/02/2006 3:04 PM")
-    var template = "---\ntitle:\ndate: "+date+"\ntags:\n---\n\n#"
+
+    configDir, err := os.UserConfigDir()
+        if err != nil {log.Fatal(err)}
+    configCheck, err := filepath.Glob(filepath.Join(configDir, "jot", "config.yaml"))
+        if err != nil {log.Fatal(err)}
+    if len(configCheck) > 0 {
+        configData, err := os.ReadFile(configCheck[0])
+            if err != nil {log.Fatal(err)}
+        var config Config
+        err = yaml.Unmarshal(configData, &config)
+            if err != nil {log.Fatal(err)}
+        notesDir = config.NotesDir
+        editor = config.Editor
+    }
 
     if len(os.Args) < 2 {
         var openEditor = exec.Command(editor)
@@ -62,7 +82,19 @@ func main() {
                 fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
             }
         }
-        var notePath = notesDir+"/"+fileName
+        var title = strings.ReplaceAll(strings.TrimSuffix(fileName, ".md"), "_", " ")
+        var mkTitle = cases.Title(language.English, cases.NoLower)
+        var date = time.Now().Format("01/02/2006 3:04 PM")
+        var template = "---\ntitle: "+mkTitle.String(title)+"\ndate: "+date+"\ntags:\n---\n\n# "+mkTitle.String(title)
+        var notePath = filepath.Join(notesDir, fileName)
+        if len(configCheck) > 0 {
+            configData, err := os.ReadFile(configCheck[0])
+                if err != nil {log.Fatal(err)}
+            var config Config
+            err = yaml.Unmarshal(configData, &config)
+                if err != nil {log.Fatal(err)}
+            template = strings.ReplaceAll(strings.ReplaceAll(config.Template, "$title", mkTitle.String(title)), "$date", date)
+        }
 
         var openNote = exec.Command(editor, notePath)
         openNote.Stdin = os.Stdin
