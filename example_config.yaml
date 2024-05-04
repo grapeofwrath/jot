@@ -1,3 +1,5 @@
-NotesDir: "/home/grape/notes"
+# Must be full path to directory
+NotesDir: "/home/user/notes"
 Editor: "nvim"
+# To auto generate the title and date, use $title and $date
 Template: "---\ntitle: $title\ndate: $date\ntags:\n---\n\n# $title"

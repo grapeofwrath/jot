@@ -18,16 +18,16 @@ Output:
 2022/06/27 02:30:30 INFO Creating note... /home/user/notes/this_is_a_zettel_title.md
 ```
 
-A note is then created using the following template, and then is the opened in the editor:
+A note is then created using the following template and opened in Neovim:
 
 ```markdown
 ---
-title:
+title: This Is A Zettel Title
 date: 06/27/2024 02:30 AM
 tags:
 ---
 
-#
+# This Is A Zettel Title
 ```
 
 This project is created to help with the Zettelkasten method, but it does not have to be used solely for that purpose.
