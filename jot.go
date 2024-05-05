@@ -40,8 +40,9 @@ func main() {
         var config Config
         err = yaml.Unmarshal(configData, &config)
             if err != nil {log.Fatal(err)}
-        notesDir = config.NotesDir
-        editor = config.Editor
+        var configDataString = string(configData)
+        if strings.Contains(configDataString, "notesdir") {notesDir = config.NotesDir}
+        if strings.Contains(configDataString, "editor") {editor = config.Editor}
     }
 
     if len(os.Args) < 2 {
@@ -93,7 +94,10 @@ func main() {
             var config Config
             err = yaml.Unmarshal(configData, &config)
                 if err != nil {log.Fatal(err)}
-            template = strings.ReplaceAll(strings.ReplaceAll(config.Template, "$title", mkTitle.String(title)), "$date", date)
+            var configDataString = string(configData)
+            if strings.Contains(configDataString, "template") {
+                template = strings.ReplaceAll(strings.ReplaceAll(config.Template, "$title", mkTitle.String(title)), "$date", date)
+            }
         }
 
         var openNote = exec.Command(editor, notePath)

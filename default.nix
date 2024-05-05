@@ -14,7 +14,7 @@
 
 buildGoApplication {
   pname = "jot";
-  version = "0.2.0";
+  version = "0.2.1";
   pwd = ./.;
   src = ./.;
   modules = ./gomod2nix.toml;
