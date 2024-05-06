@@ -28,10 +28,12 @@ Editor: "nvim"
 Template: "---\ntitle: $title\ndate: $date\ntags:\n---\n\n# $title"
 ```
 
-Configuration Options:
+**Configuration Options:**
 
 `NotesDir`: The directory for your notes
+
 `Editor`: The command to launch your editor (ie nvim not neovim)
+
 `Template`: The template to use when creating a new note (use `$date` and `$title` if you wish to include those)
 
 This project is created to help with the Zettelkasten method, but it does not have to be used solely for that purpose.
