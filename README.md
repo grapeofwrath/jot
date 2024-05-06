@@ -2,22 +2,10 @@
 
 **A Zettelkasten CLI helper written in Go**
 
-Currently, this assumes a few defaults:
+<img alt="Welcome to Jot" src="./assets/jot_demo.gif" width="600" />
 
- - `$HOME/notes` is the directory used to store the Zettelkasten
- - Neovim is the editor to open
-
-If the executable is ran without any additional arguments, it will open Neovim inside the notes directory.
+When Jot is ran without any additional arguments, it will open Neovim inside the ~/notes directory.
 To quickly create a new note, the executable can be run using all additional arguments as the title.
-
-```shell
-jot this is a zettel title
-
-Output:
-
-2022/06/27 02:30:30 INFO Creating note... /home/user/notes/this_is_a_zettel_title.md
-```
-
 A note is then created using the following template and opened in Neovim:
 
 ```markdown
@@ -29,6 +17,22 @@ tags:
 
 # This Is A Zettel Title
 ```
+
+## Configuration
+
+You can create `~/.config/jot/config.yaml` in order to adjust Jot how you like.
+
+```yaml
+NotesDir: "/home/user/notes"
+Editor: "nvim"
+Template: "---\ntitle: $title\ndate: $date\ntags:\n---\n\n# $title"
+```
+
+Configuration Options:
+
+`NotesDir`: The directory for your notes
+`Editor`: The command to launch your editor (ie nvim not neovim)
+`Template`: The template to use when creating a new note (use `$date` and `$title` if you wish to include those)
 
 This project is created to help with the Zettelkasten method, but it does not have to be used solely for that purpose.
 However, I don't plan on adding anything more than needed to help with that method.
