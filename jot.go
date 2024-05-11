@@ -3,6 +3,7 @@ package main
 import (
     "bufio"
     "fmt"
+    "log"
     "os"
     "os/exec"
     "path/filepath"
@@ -14,101 +15,120 @@ import (
     "golang.org/x/text/cases"
     "golang.org/x/text/language"
     "gopkg.in/yaml.v3"
-    "github.com/charmbracelet/log"
     "github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 type Config struct {
-    NotesDir string `yaml:"NotesDir"`
-    Editor string `yaml:"Editor"`
-    Template string `yaml:"Template"`
+    NotesDir string `yaml:"notesdir"`
+    Editor string `yaml:"editor"`
+    Template string `yaml:"template"`
 }
 
 func main() {
-    homeDir, err := os.UserHomeDir()
-        if err != nil {log.Fatal(err)}
-    var notesDir = filepath.Join(homeDir, "notes")
-    var editor = "nvim"
+    var err error
+    var homeDir string
+    var cfg Config
+    var allNoteNames []string
 
+    homeDir, err = os.UserHomeDir()
+    if err != nil {
+        log.Printf("ERROR: %v", err)
+    }
+    notesDir := filepath.Join(homeDir, "notes")
+    editor := "nvim"
     configDir, err := os.UserConfigDir()
-        if err != nil {log.Fatal(err)}
+    if err != nil {
+        log.Printf("ERROR: %v", err)
+    }
     configCheck, err := filepath.Glob(filepath.Join(configDir, "jot", "config.yaml"))
-        if err != nil {log.Fatal(err)}
+    if err != nil {
+        log.Printf("ERROR: %v", err)
+    }
+
     if len(configCheck) > 0 {
-        configData, err := os.ReadFile(configCheck[0])
-            if err != nil {log.Fatal(err)}
-        var config Config
-        err = yaml.Unmarshal(configData, &config)
-            if err != nil {log.Fatal(err)}
-        var configDataString = string(configData)
-        if strings.Contains(configDataString, "notesdir") {notesDir = config.NotesDir}
-        if strings.Contains(configDataString, "editor") {editor = config.Editor}
+        data, err := os.ReadFile(configCheck[0])
+        if err != nil {
+            log.Printf("ERROR: %v", err)
+        }
+        err = yaml.Unmarshal(data, &cfg)
+        if err != nil {
+            log.Printf("ERROR: %v", err)
+        }
+        if cfg.NotesDir != "" {
+            notesDir = cfg.NotesDir
+        }
+        if cfg.Editor != "" {
+            editor = cfg.Editor
+        }
     }
 
     if len(os.Args) < 2 {
-        var openEditor = exec.Command(editor)
+        openEditor := exec.Command(editor)
         openEditor.Dir = notesDir
         openEditor.Stdin = os.Stdin
         openEditor.Stdout = os.Stdout
         openEditor.Stderr = os.Stderr
 
         err = openEditor.Run()
-            if err != nil {log.Fatal(err)}
-    } else {
-        var allNoteNames []string
-        var allNotes, err = os.ReadDir(notesDir)
-            if err != nil {log.Fatal(err)}
-        for _, file := range allNotes {
-            allNoteNames = append(allNoteNames, file.Name())
+        if err != nil {
+            log.Printf("ERROR: %v", err)
         }
-        var fileName = strings.Join(os.Args[1:], "_")+".md"
-        for slices.Contains(allNoteNames, fileName) {
-            var matches = fuzzy.RankFind(fileName, allNoteNames)
-            sort.Sort(matches)
+        os.Exit(0)
+    }
 
-            log.Error("A note with this filename already exists")
-            fmt.Println("\033[1mMatching notes:\033[0m")
-            for _, match := range matches {
-                fmt.Println(" - \033[32m"+match.Target+"\033[0m")
-            }
-            fmt.Println("\033[1mPlease input a new filename:\033[0m")
-            var newFileName, err = bufio.NewReader(os.Stdin).ReadString('\n')
-                if err != nil {log.Fatal(err)}
-            fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
-            for strings.HasPrefix(fileName, "_") || strings.HasPrefix(fileName, ".") {
-                log.Error("Filename may not be null")
-                fmt.Println("\033[1mPlease input a new filename:\033[0m")
-                newFileName, err = bufio.NewReader(os.Stdin).ReadString('\n')
-                    if err != nil {log.Fatal(err)}
-                fileName = strings.TrimSpace(strings.ReplaceAll(newFileName, " ", "_"))+".md"
-            }
+    allNotes, err := os.ReadDir(notesDir)
+    if err != nil {
+        log.Printf("ERROR: %v", err)
+    }
+    for _, file := range allNotes {
+        allNoteNames = append(allNoteNames, file.Name())
+    }
+    filename := strings.Join(os.Args[1:], "_")+".md"
+    for slices.Contains(allNoteNames, filename) {
+        matches := fuzzy.RankFind(filename, allNoteNames)
+        sort.Sort(matches)
+        log.Println("ERROR: A note with this filename already exists")
+        fmt.Println("\033[1mMatching notes:\033[0m")
+        for _, match := range matches {
+            fmt.Println(" - \033[32m"+match.Target+"\033[0m")
         }
-        var title = strings.ReplaceAll(strings.TrimSuffix(fileName, ".md"), "_", " ")
-        var mkTitle = cases.Title(language.English, cases.NoLower)
-        var date = time.Now().Format("01/02/2006 3:04 PM")
-        var template = "---\ntitle: "+mkTitle.String(title)+"\ndate: "+date+"\ntags:\n---\n\n# "+mkTitle.String(title)
-        var notePath = filepath.Join(notesDir, fileName)
-        if len(configCheck) > 0 {
-            configData, err := os.ReadFile(configCheck[0])
-                if err != nil {log.Fatal(err)}
-            var config Config
-            err = yaml.Unmarshal(configData, &config)
-                if err != nil {log.Fatal(err)}
-            var configDataString = string(configData)
-            if strings.Contains(configDataString, "template") {
-                template = strings.ReplaceAll(strings.ReplaceAll(config.Template, "$title", mkTitle.String(title)), "$date", date)
-            }
+        fmt.Println("\033[1mPlease input a new filename:\033[0m")
+        newFilename, err := bufio.NewReader(os.Stdin).ReadString('\n')
+        if err != nil {
+            log.Printf("ERROR: %v", err)
         }
+        filename = strings.TrimSpace(strings.ReplaceAll(newFilename, " ", "_"))+".md"
+        for strings.HasPrefix(filename, "_") || strings.HasPrefix(filename, ".") {
+            log.Println("ERROR: Filename may not be null")
+            log.Println("\033[1mPlease input a new filename:\033[0m")
+            newFilename, err = bufio.NewReader(os.Stdin).ReadString('\n')
+            if err != nil {
+                log.Printf("ERROR: %v", err)
+            }
+            filename = strings.TrimSpace(strings.ReplaceAll(newFilename, " ", "_"))+".md"
+        }
+    }
+    mkTitle := cases.Title(language.English, cases.NoLower)
+    title := mkTitle.String(strings.ReplaceAll(strings.TrimSuffix(filename, ".md"), "_", " "))
+    date := time.Now().Format("01/02/2006 3:04 PM")
+    template := "---\ntitle: "+title+"\ndate: "+date+"\ntags:\n---\n\n# "+title
+    notePath := filepath.Join(notesDir, filename)
+    if cfg.Template != "" {
+        template = strings.ReplaceAll(strings.ReplaceAll(cfg.Template, "$title", title), "$date", date)
+    }
 
-        var openNote = exec.Command(editor, notePath)
-        openNote.Stdin = os.Stdin
-        openNote.Stdout = os.Stdout
-        openNote.Stderr = os.Stderr
+    openNote := exec.Command(editor, notePath)
+    openNote.Stdin = os.Stdin
+    openNote.Stdout = os.Stdout
+    openNote.Stderr = os.Stderr
 
-        err = os.WriteFile(notePath, []byte(template), 0666)
-            if err != nil {log.Fatal(err)}
-        log.Info("Creating note... "+notePath)
-        err = openNote.Run()
-            if err != nil {log.Fatal(err)}
+    err = os.WriteFile(notePath, []byte(template), 0666)
+    if err != nil {
+        log.Printf("ERROR: %v", err)
+    }
+    log.Println("Creating note...", notePath)
+    err = openNote.Run()
+    if err != nil {
+        log.Printf("ERROR: %v", err)
     }
 }
