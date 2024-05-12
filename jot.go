@@ -12,8 +12,6 @@ import (
     "strings"
     "time"
 
-    "golang.org/x/text/cases"
-    "golang.org/x/text/language"
     "gopkg.in/yaml.v3"
     "github.com/lithammer/fuzzysearch/fuzzy"
 )
@@ -108,8 +106,7 @@ func main() {
             filename = strings.TrimSpace(strings.ReplaceAll(newFilename, " ", "_"))+".md"
         }
     }
-    mkTitle := cases.Title(language.English, cases.NoLower)
-    title := mkTitle.String(strings.ReplaceAll(strings.TrimSuffix(filename, ".md"), "_", " "))
+    title := strings.ReplaceAll(strings.TrimSuffix(filename, ".md"), "_", " ")
     date := time.Now().Format("01/02/2006 3:04 PM")
     template := "---\ntitle: "+title+"\ndate: "+date+"\ntags:\n---\n\n# "+title
     notePath := filepath.Join(notesDir, filename)
