@@ -24,7 +24,7 @@
     packages = forAllSystems ({pkgs}: {
       default = pkgs.buildGoModule rec {
         pname = "jot";
-        version = "0.2.1";
+        version = "1.0.0";
 
         src = ./.;
 

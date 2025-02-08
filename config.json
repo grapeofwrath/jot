@@ -1,0 +1,15 @@
+{
+  "editor": "nvim",
+  "template": {
+    "directory": "/home/marcus/grapepad/Templates",
+    "name": "",
+    "format": {
+      "date": "YYYY-MM-DD",
+      "time": 24,
+      "title": "kebab-case"
+    }
+  },
+  "vault": {
+    "directory": "/home/marcus/grapepad/Marcus"
+  }
+}
